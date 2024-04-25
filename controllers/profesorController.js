@@ -1,27 +1,36 @@
-// controllers/profesoresController.js
+// const Profesores = require('../models/Profesor');
+// const sequelize = require('../config/db');
+// const Direccion = require('../models/Direccion');
+// const Educativos = require('../models/AntecedentesEducativo');
+const createMeetingRoom = require('../routes/meetings');
 const Profesores = require('../models/Profesor');
-
 const sequelize = require('../config/db');
-const Sequelize = sequelize.Sequelize;
-
-const Alumno = require('../models/Alumno');
-const Apoderado = require('../models/Apoderado');
 const Direccion = require('../models/Direccion');
 const Educativos = require('../models/AntecedentesEducativo');
-
-
-exports.createProfesor= async (req, res) => {
+// const sequelize = require('../config/db');
+const Sequelize = sequelize.Sequelize;
+exports.createProfesor = async (req, res) => {
   const t = await sequelize.transaction();
+  
   try {
-    const { email, usuario, password, nombre, apellido, dni, genero, telefono, fecha_nac, especialidad, descripcion,  foto,  Roles_id, direccion, educativos } = req.body;
+    const { email, usuario, password, nombre, apellido, dni, genero, telefono, fecha_nac, especialidad, descripcion, foto, Roles_id, direccion, educativos } = req.body;
 
     // Crear la dirección
     const newDireccion = await Direccion.create(direccion, { transaction: t });
 
-    // Crear el apoderado
+    // Crear el antecedente educativo
     const newAntecedenteEducativo = await Educativos.create(educativos, { transaction: t });
 
-    // Crear el profesor
+    // Crear la sala de Zoom
+    //const meetingRoomLink = await createMeetingRoom(`${nombre} ${apellido}`);
+
+    // Comprobar si hay datos válidos para la sala de reuniones
+    // if (!meetingRoomLink) {
+    //   await t.rollback();
+    //   return res.status(400).json({ success: false, message: 'No se pudo crear la sala de reuniones de Zoom' });
+    // }
+
+    // Crear el profesor con el enlace de la sala de reuniones asociado
     const newProfesor = await Profesores.create({
       email,
       usuario,
@@ -30,6 +39,7 @@ exports.createProfesor= async (req, res) => {
       apellido,
       genero,
       dni,
+      sala: "meetingRoomLink", // Guarda el enlace de la sala de reuniones de Zoom
       especialidad,
       descripcion,
       foto,
@@ -40,17 +50,23 @@ exports.createProfesor= async (req, res) => {
       Antecedentes_educativos_id: newAntecedenteEducativo.id
     }, { transaction: t });
 
-    // Commit la transacción
+    // Confirmar la transacción
     await t.commit();
-
-    res.json(newProfesor);
+    
+    res.status(201).json({ 
+      success: true, 
+      message: 'Profesor creado exitosamente',
+      professor: newProfesor.toJSON()
+      //meeting_link: meetingRoomLink // Agregamos el enlace de la sala a la respuesta
+    });
   } catch (error) {
-    // Rollback si hay un error
+    // Revertir la transacción en caso de error
     await t.rollback();
     console.error(error);
-    res.status(500).json({ message: 'Hubo un error al crear el profesor' });
+    res.status(500).json({ success: false, message: 'Hubo un error al crear el profesor' });
   }
 };
+
 
 ///Método para obtener un profesor por su ID
 exports.getProfesorById = async (req, res) => {
@@ -90,7 +106,7 @@ exports.getAllProfesores = async (req, res) => {
     res.status(500).json({ message: 'Hubo un error al buscar los profesores' });
   }
 };
-exports.getAllProfesoresName = async (req, res) => {
+exports.getAllProfesoresEspecialidad = async (req, res) => {
   try {
     const { especialidad } = req.query;
     let whereCondition = {};
@@ -120,18 +136,6 @@ exports.getAllProfesoresName = async (req, res) => {
   }
 };
 
-
-
-
-// // controllers/profesoresController.js
-// const Profesores = require('../models/Profesor');
-
-// const sequelize = require('../config/db');
-
-// const Alumno = require('../models/Alumno');
-// const Apoderado = require('../models/Apoderado');
-// const Direccion = require('../models/Direccion');
-// const Educativos = require('../models/AntecedentesEducativo');
 
 
 // exports.createProfesor= async (req, res) => {
@@ -176,67 +180,10 @@ exports.getAllProfesoresName = async (req, res) => {
 //   }
 // };
 
-// ///Método para obtener un profesor por su ID
-// exports.getProfesorById = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-
-//     // Buscar el profesor por su ID en la base de datos
-//     const profesor = await Alumno.findByPk(id);
-
-//     if (!profesor) {
-//       return res.status(404).json({ message: 'profesor no encontrado' });
-//     }
-
-//     // Enviar el profesor encontrado como respuesta
-//     res.json(profesor);
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ message: 'Hubo un error al buscar el profesor' });
-//   }
-// };
-// exports.getAllProfesores = async (req, res) => {
-//   try {
-//     // Buscar todos los profesores en la base de datos con datos de antecedentes educativos
-//     const profesores = await Profesores.findAll({
-//       include: [
-//         {
-//           model: Educativos,
-//           as: 'Educativos', // Corregir el alias aquí para que coincida con el definido en el modelo Profesores
-//         }
-//       ]
-//     });
-
-//     // Enviar la lista de profesores como respuesta
-//     res.json(profesores);
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ message: 'Hubo un error al buscar los profesores' });
-//   }
-// };
 
 
 
 
-
-
-
-
-
-
-
-
-
-// // Obtener todos los profesores
-// exports.getAllProfesores = async (req, res) => {
-//   try {
-//     const profesores = await Profesores.findAll();
-//     res.json(profesores);
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ error: 'Error al obtener profesores' });
-//   }
-// };
 
 // // Obtener un profesor por ID
 // exports.getProfesorById = async (req, res) => {
@@ -255,23 +202,6 @@ exports.getAllProfesoresName = async (req, res) => {
 //   }
 // };
 
-// // Supongamos que el modelo del profesor tiene un campo Roles_id
-
-// // Crear un nuevo profesor
-// exports.createProfesor = async (req, res) => {
-//   try {
-//     // Agrega el valor 2 al campo Roles_id antes de crear el profesor
-//     req.body.Roles_id = 2;
-
-//     const nuevoProfesor = await Profesores.create(req.body);
-//     res.status(201).json(nuevoProfesor);
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ error: 'Error al crear profesor' });
-//   }
-// };
-
-// // Resto del código...
 
 
 // // Actualizar un profesor por ID
@@ -311,5 +241,82 @@ exports.getAllProfesoresName = async (req, res) => {
 //   } catch (error) {
 //     console.error(error);
 //     res.status(500).json({ error: 'Error al eliminar profesor' });
+//   }
+// };
+
+
+// const createMeetingRoom = require('../routes/meetings');
+// const Profesores = require('../models/Profesor');
+// const sequelize = require('../config/db');
+// const Direccion = require('../models/Direccion');
+// const Educativos = require('../models/AntecedentesEducativo');
+// const MeetingRoom = require('../models/MeetingRoom');
+// const meetingRoomController = require('../controllers/meetingRoomController');
+
+// exports.createProfesor = async (req, res) => {
+//   const t = await sequelize.transaction();
+  
+//   try {
+//     const { email, usuario, password, nombre, apellido, dni, genero, telefono, fecha_nac, especialidad, descripcion, foto, Roles_id, direccion, educativos } = req.body;
+
+//     // Crear la dirección
+//     const newDireccion = await Direccion.create(direccion, { transaction: t });
+
+//     // Crear el antecedente educativo
+//     const newAntecedenteEducativo = await Educativos.create(educativos, { transaction: t });
+
+//     // Crear la sala de Google Meet
+//     const meetingRoomData = await createMeetingRoom(`${nombre} ${apellido}`);
+
+//     // Comprobar si hay datos válidos para la sala de reuniones
+//     if (!meetingRoomData || !meetingRoomData.htmlLink) {
+//       await t.rollback();
+//       return res.status(400).json({ success: false, message: 'No se pudo crear la sala de reuniones' });
+//     }
+
+//     // Crear el profesor con el ID de la sala de reuniones asociada
+//     const newProfesor = await Profesores.create({
+//       email,
+//       usuario,
+//       password,
+//       nombre,
+//       apellido,
+//       genero,
+//       dni,
+//       sala: meetingRoomData.htmlLink, // Guarda el enlace de la sala de reuniones
+//       especialidad,
+//       descripcion,
+//       foto,
+//       telefono,
+//       fecha_nac,
+//       Roles_id,
+//       Direccion_id: newDireccion.id,
+//       Antecedentes_educativos_id: newAntecedenteEducativo.id
+//     }, { transaction: t });
+
+//     // Crear la sala de reuniones y asociarla al profesor
+//     await MeetingRoom.create({
+//       idProfesor: newProfesor.id,
+//       htmlLink: meetingRoomData.htmlLink,
+//       startDateTime: meetingRoomData.start.dateTime,
+//       endDateTime: meetingRoomData.end.dateTime,
+//       iCalUID: meetingRoomData.iCalUID,
+//       remindersUseDefault: meetingRoomData.reminders.useDefault,
+//       creatorEmail: meetingRoomData.creator.email,
+//       organizerEmail: meetingRoomData.organizer.email,
+//     }, { transaction: t });
+
+//     // Confirmar la transacción
+//     await t.commit();
+//     res.status(201).json({ 
+//       success: true, 
+//       message: 'Profesor creado exitosamente',
+//       professor: newProfesor.toJSON()
+//     });
+//   } catch (error) {
+//     // Revertir la transacción en caso de error
+//     await t.rollback();
+//     console.error(error);
+//     res.status(500).json({ success: false, message: 'Hubo un error al crear el profesor' });
 //   }
 // };

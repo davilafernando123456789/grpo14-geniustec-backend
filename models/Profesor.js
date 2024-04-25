@@ -2,6 +2,7 @@
 const { DataTypes, Sequelize } = require('sequelize');
 const sequelize = require('../config/db');
 const Educativos = require('./AntecedentesEducativo');
+const MeetingRoom = require('./MeetingRoom');
 
 const Profesores = sequelize.define('Profesores', {
   id: {
@@ -59,6 +60,11 @@ const Profesores = sequelize.define('Profesores', {
     allowNull: false,
     unique: true,
   },
+  sala: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    unique: true,
+  },
   Antecedentes_educativos_id: {
     type: DataTypes.INTEGER,
     allowNull: false,
@@ -86,6 +92,6 @@ const Profesores = sequelize.define('Profesores', {
 });
 
 Profesores.belongsTo(Educativos, { foreignKey: 'id', as: 'Educativos' });
-
+Profesores.hasMany(MeetingRoom, { foreignKey: 'idProfesor' });
 
 module.exports = Profesores;
