@@ -82,6 +82,7 @@ exports.getInscripcionesByAlumnoId = async (req, res) => {
         where: { Alumnos_id: alumnoId }
       });
       res.json(inscripciones);
+      console.log(inscripciones);
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: 'Error al obtener las inscripciones del alumno' });
@@ -96,6 +97,7 @@ exports.getInscripcionesByAlumnoId = async (req, res) => {
         where: { Profesores_id: profesorId }
       });
       res.json(inscripciones);
+      console.log(inscripciones);
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: 'Error al obtener las inscripciones del profesor' });

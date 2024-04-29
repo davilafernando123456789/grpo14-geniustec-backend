@@ -7,7 +7,7 @@ router.get('/', profesorController.getAllProfesores);
 router.get('/filtrar/:id', profesorController.getProfesorById);
 router.post('/', profesorController.createProfesor);
 router.get('/buscar', profesorController.getAllProfesoresEspecialidad);
-// router.put('/:id', profesorController.updateProfesorById);
+router.put('/editar/:id', profesorController.updateProfesorById);
 // router.delete('/:id', profesorController.deleteProfesorById);
 
 module.exports = router;

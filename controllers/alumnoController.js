@@ -88,6 +88,51 @@ exports.getAllAlumnos = async (req, res) => {
     res.status(500).json({ message: 'Hubo un error al buscar los alumnos' });
   }
 };
+// Método para actualizar un alumno por su ID
+exports.updateAlumnoById = async (req, res) => {
+  const t = await sequelize.transaction();
+  try {
+    const { id } = req.params;
+    const { email, usuario, password, nombre, apellido, genero, telefono, fecha_nac, Roles_id, direccion, apoderado } = req.body;
+
+    // Buscar el alumno por su ID en la base de datos
+    const alumno = await Alumno.findByPk(id, { include: [{ model: Apoderado, as: 'apoderado' }] });
+
+    if (!alumno) {
+      return res.status(404).json({ message: 'Alumno no encontrado' });
+    }
+
+    // Actualizar los datos del alumno
+    await alumno.update({
+      email,
+      usuario,
+      password,
+      nombre,
+      apellido,
+      genero,
+      telefono,
+      fecha_nac,
+      Roles_id,
+    }, { transaction: t });
+
+    // Actualizar los datos de la dirección del apoderado
+    await Direccion.update(direccion, { where: { id: alumno.apoderado.Direccion_id } }, { transaction: t });
+
+    // Actualizar los datos del apoderado
+    await Apoderado.update(apoderado, { where: { id: alumno.Apoderado_id } }, { transaction: t });
+
+    // Commit la transacción
+    await t.commit();
+
+    res.json({ message: 'Alumno actualizado correctamente' });
+  } catch (error) {
+    // Rollback si hay un error
+    await t.rollback();
+    console.error(error);
+    res.status(500).json({ message: 'Hubo un error al actualizar el alumno' });
+  }
+};
+
 
 // Obtener todos los alumnos
 // exports.getAllAlumnos = async (req, res) => {

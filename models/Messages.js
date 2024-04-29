@@ -21,6 +21,10 @@ const Mensaje = sequelize.define('Mensaje', {
   audio_url: {
     type: DataTypes.STRING,
     allowNull: true,
+  },
+  sent: {
+    type: DataTypes.BOOLEAN,
+    allowNull: true, 
   }
 });
 

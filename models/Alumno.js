@@ -2,6 +2,7 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 const Apoderado = require('./Apoderado');
+const Inscripcion = require('./Inscripciones');
 const Alumno = sequelize.define('Alumno', {
   id: {
     type: DataTypes.INTEGER,
@@ -62,5 +63,6 @@ const Alumno = sequelize.define('Alumno', {
 }, { timestamps: true });
 
 Alumno.belongsTo(Apoderado, { foreignKey: 'Apoderado_id', as: 'apoderado' });
+
 
 module.exports = Alumno;

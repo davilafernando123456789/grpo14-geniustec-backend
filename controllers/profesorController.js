@@ -7,6 +7,8 @@ const Profesores = require('../models/Profesor');
 const sequelize = require('../config/db');
 const Direccion = require('../models/Direccion');
 const Educativos = require('../models/AntecedentesEducativo');
+const jwt = require('jsonwebtoken');
+
 // const sequelize = require('../config/db');
 const Sequelize = sequelize.Sequelize;
 exports.createProfesor = async (req, res) => {
@@ -21,14 +23,6 @@ exports.createProfesor = async (req, res) => {
     // Crear el antecedente educativo
     const newAntecedenteEducativo = await Educativos.create(educativos, { transaction: t });
 
-    // Crear la sala de Zoom
-    //const meetingRoomLink = await createMeetingRoom(`${nombre} ${apellido}`);
-
-    // Comprobar si hay datos válidos para la sala de reuniones
-    // if (!meetingRoomLink) {
-    //   await t.rollback();
-    //   return res.status(400).json({ success: false, message: 'No se pudo crear la sala de reuniones de Zoom' });
-    // }
 
     // Crear el profesor con el enlace de la sala de reuniones asociado
     const newProfesor = await Profesores.create({
@@ -50,15 +44,23 @@ exports.createProfesor = async (req, res) => {
       Antecedentes_educativos_id: newAntecedenteEducativo.id
     }, { transaction: t });
 
-    // Confirmar la transacción
-    await t.commit();
-    
-    res.status(201).json({ 
-      success: true, 
-      message: 'Profesor creado exitosamente',
-      professor: newProfesor.toJSON()
-      //meeting_link: meetingRoomLink // Agregamos el enlace de la sala a la respuesta
-    });
+     // Crear token para profesores
+     const token = jwt.sign({ id: newProfesor.id, rol: 2 }, 'secreto', { expiresIn: '1h' }); 
+
+     // Confirmar la transacción
+     await t.commit();
+     
+     res.status(200).json({ 
+       mensaje: 'OK',
+       rol: 2,
+       usuario: {
+         id: newProfesor.id,
+         email: newProfesor.email,
+         nombre: newProfesor.nombre
+         // Agrega otros campos del profesor que desees devolver
+       },
+       token
+     });
   } catch (error) {
     // Revertir la transacción en caso de error
     await t.rollback();
@@ -133,6 +135,45 @@ exports.getAllProfesoresEspecialidad = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Hubo un error al buscar los profesores' });
+  }
+};
+exports.updateProfesorById = async (req, res) => {
+  const t = await sequelize.transaction();
+  try {
+    const { id } = req.params;
+    const { email, usuario, nombre, apellido, dni, genero, telefono, fecha_nac, especialidad, descripcion, foto, Roles_id } = req.body;
+
+    // Buscar el profesor por su ID en la base de datos
+    const profesor = await Profesores.findByPk(id);
+
+    if (!profesor) {
+      return res.status(404).json({ message: 'Profesor no encontrado' });
+    }
+
+    // Actualizar los datos del profesor
+    await profesor.update({
+      email,
+      usuario,
+      nombre,
+      apellido,
+      dni,
+      genero,
+      telefono,
+      fecha_nac,
+      especialidad,
+      descripcion,
+      foto,
+      Roles_id
+    }, { transaction: t });
+
+    // Commit la transacción
+    await t.commit();
+    res.json({ message: 'Profesor actualizado correctamente' });
+  } catch (error) {
+    // Rollback si hay un error
+    await t.rollback();
+    console.error(error);
+    res.status(500).json({ message: 'Hubo un error al actualizar el profesor' });
   }
 };
 
